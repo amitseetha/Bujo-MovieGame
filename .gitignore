@@ -1,0 +1,36 @@
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+android/*.iml
+android/app/*.iml
+android/.cxx/
+android/gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+# Node (PRD generation scripts live outside the repo, but just in case)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets
+*.keystore
+*.jks
+keystore.properties
+secrets.properties
+
+# Stale intermediate files kept in the workspace for reference but not committed
+/Bujo PRD v1.docx
+/Questions, Options.xlsx
+/check_links.py
