@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bujo</string>
+    <string name="tagline">A game of movies</string>
+    <string name="start">Start</string>
+    <string name="continue_label">Continue</string>
+    <string name="username_hint">Pick a username</string>
+    <string name="coins">Coins</string>
+    <string name="hint_dialogue">Dialogue hint</string>
+    <string name="hint_soundtrack">Soundtrack hint</string>
+    <string name="hint_cost">30 coins</string>
+    <string name="guess_hint">Type the movie name…</string>
+    <string name="submit">Guess</string>
+    <string name="not_enough_coins">Not enough coins.</string>
+    <string name="all_caught_up">You’re all caught up!</string>
+    <string name="all_caught_up_body">You’ve played every question in v0.1. Thanks for trying Bujo — drop a note below and tell us what you thought.</string>
+    <string name="send_feedback">Send feedback</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="privacy">Privacy Policy</string>
+    <string name="sound">Sound</string>
+    <string name="version_label">Version 0.1.0</string>
+    <string name="about_body_1">Bujo is a game of movies — guess the film from four snapshots and an iconic dialogue.</string>
+    <string name="about_body_2">Made by Amit.</string>
+    <string name="privacy_body">Bujo v0.1 stores your username, coin balance and answered-question history locally on your device using Android DataStore. The app has no backend and makes no network calls during gameplay. We do not collect analytics, crash reports or any personal data. If you tap the Feedback button, your email client will open with a pre-addressed draft to amitseetha@gmail.com — sending that email is entirely your choice. Uninstalling the app or clearing its data deletes all locally-stored information. Contact: amitseetha@gmail.com.</string>
+</resources>

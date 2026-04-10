@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_red">#C8102E</color>
+    <color name="brand_deep_red">#9A0C22</color>
+    <color name="brand_off_white">#FAF7F2</color>
+    <color name="brand_cream">#F2EADB</color>
+    <color name="brand_dark">#2B1810</color>
+    <color name="brand_brown">#6B4E3D</color>
+    <color name="brand_gold">#D4A574</color>
+</resources>

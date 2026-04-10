@@ -1,0 +1,56 @@
+{
+  "version": "0.1.0",
+  "questions": [
+    {
+      "question_id": 1,
+      "prompt": "Which Movie",
+      "movie_title": "Pulp Fiction",
+      "accepted_answers": ["Pulp Fiction"],
+      "snapshot_filenames": [
+        "q1_snap1.webp",
+        "q1_snap2.webp",
+        "q1_snap3.webp",
+        "q1_snap4.webp"
+      ],
+      "dialogue_filename": "q1_dialogue.m4a",
+      "soundtrack_filename": "q1_soundtrack.m4a",
+      "trivia_quote": "Vincent is in every chapter of the film. His career is a series of assignments he can't quite handle.",
+      "success_line": "Face melting guitar solo!",
+      "poster_filename": "q1_poster.webp"
+    },
+    {
+      "question_id": 2,
+      "prompt": "Which Movie",
+      "movie_title": "Pulp Fiction",
+      "accepted_answers": ["Pulp Fiction"],
+      "snapshot_filenames": [
+        "q2_snap1.webp",
+        "q2_snap2.webp",
+        "q2_snap3.webp",
+        "q2_snap4.webp"
+      ],
+      "dialogue_filename": "q2_dialogue.m4a",
+      "soundtrack_filename": "q2_soundtrack.m4a",
+      "trivia_quote": "The method of the movie is to involve its characters in sticky situations, and then let them escape into stickier ones. Most of the action in the movie comes under the heading of crisis control. \u2014 Roger Ebert",
+      "success_line": "You're outta sight!",
+      "poster_filename": "q2_poster.webp"
+    },
+    {
+      "question_id": 3,
+      "prompt": "Which Movie",
+      "movie_title": "Pulp Fiction",
+      "accepted_answers": ["Pulp Fiction"],
+      "snapshot_filenames": [
+        "q3_snap1.webp",
+        "q3_snap2.webp",
+        "q3_snap3.webp",
+        "q3_snap4.webp"
+      ],
+      "dialogue_filename": "q3_dialogue.m4a",
+      "soundtrack_filename": "q3_soundtrack.m4a",
+      "trivia_quote": "The mark on Mia's chest disappears when she's revived, because it was shot by having Vincent pull the needle out, then running the film backwards.",
+      "success_line": "Get to the chopper!",
+      "poster_filename": "q3_poster.webp"
+    }
+  ]
+}

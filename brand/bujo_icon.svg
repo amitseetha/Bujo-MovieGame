@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Bujo App Icon: Film strip background with a bold B monogram -->
+  <!-- Off-white rounded-square background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF7F2"/>
+      <stop offset="100%" stop-color="#F2EDE4"/>
+    </linearGradient>
+    <linearGradient id="redFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C8102E"/>
+      <stop offset="100%" stop-color="#9A0C22"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+
+  <!-- Top and bottom film sprocket strips -->
+  <rect x="0" y="0" width="512" height="56" fill="#2B1810"/>
+  <rect x="0" y="456" width="512" height="56" fill="#2B1810"/>
+
+  <!-- Top sprocket holes -->
+  <g fill="#FAF7F2">
+    <rect x="24"  y="16" width="32" height="24" rx="4"/>
+    <rect x="80"  y="16" width="32" height="24" rx="4"/>
+    <rect x="136" y="16" width="32" height="24" rx="4"/>
+    <rect x="192" y="16" width="32" height="24" rx="4"/>
+    <rect x="248" y="16" width="32" height="24" rx="4"/>
+    <rect x="304" y="16" width="32" height="24" rx="4"/>
+    <rect x="360" y="16" width="32" height="24" rx="4"/>
+    <rect x="416" y="16" width="32" height="24" rx="4"/>
+    <rect x="456" y="16" width="32" height="24" rx="4"/>
+  </g>
+
+  <!-- Bottom sprocket holes -->
+  <g fill="#FAF7F2">
+    <rect x="24"  y="472" width="32" height="24" rx="4"/>
+    <rect x="80"  y="472" width="32" height="24" rx="4"/>
+    <rect x="136" y="472" width="32" height="24" rx="4"/>
+    <rect x="192" y="472" width="32" height="24" rx="4"/>
+    <rect x="248" y="472" width="32" height="24" rx="4"/>
+    <rect x="304" y="472" width="32" height="24" rx="4"/>
+    <rect x="360" y="472" width="32" height="24" rx="4"/>
+    <rect x="416" y="472" width="32" height="24" rx="4"/>
+    <rect x="456" y="472" width="32" height="24" rx="4"/>
+  </g>
+
+  <!-- Bold B monogram, centered -->
+  <text
+    x="256" y="340"
+    font-family="Georgia, 'Playfair Display', serif"
+    font-size="320"
+    font-weight="900"
+    text-anchor="middle"
+    fill="url(#redFill)"
+    letter-spacing="-8">B</text>
+</svg>
