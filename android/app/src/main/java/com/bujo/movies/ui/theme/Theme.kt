@@ -12,28 +12,70 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ── Bujo brand palette ────────────────────────────────────────────────────────
-val BrandRed = Color(0xFFC8102E)
-val BrandDeepRed = Color(0xFF9A0C22)
-val BrandOffWhite = Color(0xFFFAF7F2)
-val BrandCream = Color(0xFFF2EADB)
-val BrandDark = Color(0xFF2B1810)
-val BrandBrown = Color(0xFF6B4E3D)
-val BrandGold = Color(0xFFD4A574)
+// Strictly restricted to the approved palette. Do NOT introduce any other
+// colors in screens — compose them from these tokens only.
+//
+// Primary — in order of dominance:
+//   1. BrandPink      (#F24E86)  — app background / dominant surface
+//   2. BrandOffWhite  (#F8F8F8)  — text / cards / CTA container
+//   3. BrandDark      (#383838)  — body text / strong labels / CTA text
+//   4. BrandCyan      (#02B4FF)  — secondary CTA / links / highlights
+val BrandPink = Color(0xFFF24E86)        // #1 dominant — primary bg / brand
+val BrandOffWhite = Color(0xFFF8F8F8)    // #2 — text / cards / CTA container
+val BrandDark = Color(0xFF383838)        // #3 — body text / CTA content
+val BrandCyan = Color(0xFF02B4FF)        // #4 — secondary CTA / links
+
+// Secondary — use only when needed (coin glyphs, status signals, etc.)
+val BrandGray = Color(0xFFB1B1B1)        // neutral gray (dividers, placeholders)
+val BrandGreen = Color(0xFF54D584)       // success signal
+val BrandYellow = Color(0xFFF4CF54)      // coin / caution signal
+val BrandLavender = Color(0xFFA1A4FD)    // highlight
+val BrandRed = Color(0xFFFF5C5C)         // error / destructive
+val BrandTeal = Color(0xFF35525E)        // deep teal
+
+// ── Back-compat aliases ──────────────────────────────────────────────────────
+// These names are referenced across the codebase from the previous palette.
+// They now all map onto the approved tokens above so existing code keeps
+// compiling without color drift.
+val BrandDeepRed = BrandRed
+val BrandCream = BrandOffWhite
+val BrandBrown = BrandGray
+val BrandGold = BrandYellow
+
+// ── Legacy v0.1 palette ──────────────────────────────────────────────────────
+// Used by screens that have been reverted to match the v0.1 APK look
+// (cream background + crimson red accents). These are intentionally NOT part
+// of the Brand* palette — they exist to match the shipping APK until each
+// screen is re-themed to the Brand* tokens one by one.
+val LegacyCream = Color(0xFFF5EBD1)      // cream background
+val LegacyCrimson = Color(0xFFC8102E)    // primary red (titles, buttons)
+val LegacyDark = Color(0xFF1E1E1E)       // body text
+val LegacyMuted = Color(0xFF6B6B6B)      // muted secondary text
 
 private val BujoColorScheme = lightColorScheme(
-    primary = BrandRed,
-    onPrimary = BrandOffWhite,
-    primaryContainer = BrandDeepRed,
-    onPrimaryContainer = BrandOffWhite,
-    secondary = BrandGold,
-    onSecondary = BrandDark,
-    background = BrandOffWhite,
-    onBackground = BrandDark,
-    surface = BrandCream,
-    onSurface = BrandDark,
-    surfaceVariant = BrandCream,
-    onSurfaceVariant = BrandBrown,
-    error = BrandDeepRed,
+    // Primary CTA surfaces: OffWhite container with Pink label reads as the
+    // natural inverse of the pink background.
+    primary = BrandOffWhite,
+    onPrimary = BrandPink,
+    primaryContainer = BrandOffWhite,
+    onPrimaryContainer = BrandPink,
+    // Secondary = dark charcoal for high-contrast labels / outlined buttons.
+    secondary = BrandDark,
+    onSecondary = BrandOffWhite,
+    secondaryContainer = BrandDark,
+    onSecondaryContainer = BrandOffWhite,
+    // Tertiary = cyan for hint / link accents.
+    tertiary = BrandCyan,
+    onTertiary = BrandOffWhite,
+    // The whole app sits on pink.
+    background = BrandPink,
+    onBackground = BrandOffWhite,
+    surface = BrandPink,
+    onSurface = BrandOffWhite,
+    surfaceVariant = BrandOffWhite,
+    onSurfaceVariant = BrandDark,
+    outline = BrandOffWhite,
+    error = BrandRed,
     onError = BrandOffWhite,
 )
 

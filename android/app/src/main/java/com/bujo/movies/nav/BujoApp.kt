@@ -47,15 +47,18 @@ fun BujoApp() {
     // Load bundled content once.
     val content: ContentPack = remember { ContentLoader.load(context) }
 
-    // Resolve initial screen: splash → (username or question or all-caught-up).
+    // Resolve initial state: existing username (if any) + next screen after splash.
+    // Splash itself now collects the username, so the initial route after splash is
+    // always QUESTION (or ALL_CAUGHT_UP if the user has already answered everything).
     var initialResolved by remember { mutableStateOf(false) }
-    var startRoute by remember { mutableStateOf(Routes.SPLASH) }
+    var initialUsername by remember { mutableStateOf("") }
+    var startRoute by remember { mutableStateOf(Routes.QUESTION) }
 
     LaunchedEffect(Unit) {
         val profile = ProfileStore.profileFlow(context).firstOrNull()
+        initialUsername = profile?.username.orEmpty()
         startRoute = when {
-            profile?.username.isNullOrBlank() -> Routes.USERNAME
-            profile!!.answeredIds.size >= content.questions.size -> Routes.ALL_CAUGHT_UP
+            profile != null && profile.answeredIds.size >= content.questions.size -> Routes.ALL_CAUGHT_UP
             else -> Routes.QUESTION
         }
         initialResolved = true
@@ -69,6 +72,7 @@ fun BujoApp() {
             composable(Routes.SPLASH) {
                 SplashScreen(
                     ready = initialResolved,
+                    initialUsername = initialUsername,
                     onContinue = {
                         nav.navigate(startRoute) {
                             popUpTo(Routes.SPLASH) { inclusive = true }
@@ -131,15 +135,6 @@ fun BujoApp() {
             }
             composable(Routes.PRIVACY) {
                 PrivacyScreen(onBack = { nav.popBackStack() })
-            }
-        }
-    }
-
-    // Auto-advance past splash once initial route is resolved.
-    LaunchedEffect(initialResolved) {
-        if (initialResolved) {
-            nav.navigate(startRoute) {
-                popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }
     }

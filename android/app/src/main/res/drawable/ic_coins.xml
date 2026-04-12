@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <!-- Bottom coin -->
+    <path
+        android:pathData="M10,24 C10,21.8 13.6,20 18,20 C22.4,20 26,21.8 26,24 C26,26.2 22.4,28 18,28 C13.6,28 10,26.2 10,24 Z"
+        android:fillColor="#D4B44A"/>
+    <path
+        android:pathData="M10,22 C10,19.8 13.6,18 18,18 C22.4,18 26,19.8 26,22 C26,24.2 22.4,26 18,26 C13.6,26 10,24.2 10,22 Z"
+        android:fillColor="#F4CF54"/>
+    <!-- Middle coin -->
+    <path
+        android:pathData="M8,18 C8,15.8 11.6,14 16,14 C20.4,14 24,15.8 24,18 C24,20.2 20.4,22 16,22 C11.6,22 8,20.2 8,18 Z"
+        android:fillColor="#D4B44A"/>
+    <path
+        android:pathData="M8,16 C8,13.8 11.6,12 16,12 C20.4,12 24,13.8 24,16 C24,18.2 20.4,20 16,20 C11.6,20 8,18.2 8,16 Z"
+        android:fillColor="#F4CF54"/>
+    <!-- Top coin -->
+    <path
+        android:pathData="M6,12 C6,9.8 9.6,8 14,8 C18.4,8 22,9.8 22,12 C22,14.2 18.4,16 14,16 C9.6,16 6,14.2 6,12 Z"
+        android:fillColor="#D4B44A"/>
+    <path
+        android:pathData="M6,10 C6,7.8 9.6,6 14,6 C18.4,6 22,7.8 22,10 C22,12.2 18.4,14 14,14 C9.6,14 6,12.2 6,10 Z"
+        android:fillColor="#F4CF54"/>
+</vector>

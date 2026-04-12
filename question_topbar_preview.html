@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Question Screen Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; display: flex; justify-content: center; padding: 30px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  .phone {
+    width: 375px;
+    height: 780px;
+    border-radius: 32px;
+    overflow: hidden;
+    background: #FDFFF1;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── White top strip ── */
+  .top-bar {
+    position: relative;
+    background: #fff;
+    padding: 14px 16px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+    border-bottom: 1px solid #F7F9EB;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  }
+  .gear-icon { width: 30px; height: 30px; color: #A03234; }
+  .gear-icon svg { width: 100%; height: 100%; }
+  .badge-wrap {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 5px));
+    z-index: 3;
+  }
+  .badge { position: relative; width: 64px; height: 64px; }
+  .badge svg { width: 100%; height: 100%; }
+  .badge-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 15px; font-weight: 900;
+  }
+  .coins-row { display: flex; align-items: center; gap: 4px; }
+  .coins-icon { width: 34px; height: 34px; }
+  .coins-icon svg { width: 100%; height: 100%; }
+  .coins-count { color: #A03234; font-size: 20px; font-weight: 700; }
+
+  /* ── Play area ── */
+  .play-area {
+    flex: 1; padding: 12px 16px;
+    display: flex; flex-direction: column;
+  }
+  .prompt { color: #C8102E; font-size: 26px; font-weight: 900; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .grid-cell { aspect-ratio: 1; background: #c8c0ad; border-radius: 10px; }
+
+  /* ── Answer box — fills to bottom ── */
+  .answer-box {
+    flex: 1;
+    border: 1px solid #EBD6CB;
+    border-radius: 16px;
+    padding: 24px 20px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .slots {
+    display: flex; justify-content: center; align-items: center;
+    gap: 3px; flex-wrap: nowrap;
+  }
+  .dash { width: 18px; height: 4px; background: #A03234; border-radius: 2px; }
+  .typed-letter {
+    width: 18px; text-align: center;
+    color: #A03234; font-size: 16px; font-weight: 700;
+  }
+  .slash { color: #A03234; font-size: 28px; font-weight: 800; margin: 0 6px; }
+  .hint-row {
+    display: flex; gap: 10px;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+  }
+  .hint-icon { width: 42px; height: 42px; cursor: pointer; }
+
+  /* Speech bubble icon (green) */
+  .speech-svg { fill: #A3DB76; }
+  .speech-svg.used { fill: #A03234; }
+  /* Music icon (green) */
+  .music-svg { fill: #A3DB76; }
+  .music-svg.used { fill: #A03234; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="gear-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </div>
+    <div class="badge-wrap">
+      <div class="badge">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M53.2,9.3 Q56.4,13.6 60.9,10.6 Q65.4,7.7 66.9,12.8 Q68.5,18.0 73.7,16.7 Q78.9,15.5 78.6,20.9 Q78.3,26.2 83.7,26.9 Q89.0,27.5 86.9,32.4 Q84.8,37.3 89.5,39.8 Q94.3,42.2 90.7,46.1 Q87.0,50.0 90.7,53.9 Q94.3,57.8 89.5,60.2 Q84.8,62.7 86.9,67.6 Q89.0,72.5 83.7,73.1 Q78.3,73.8 78.6,79.1 Q78.9,84.5 73.7,83.3 Q68.5,82.0 66.9,87.2 Q65.4,92.3 60.9,89.4 Q56.4,86.4 53.2,90.7 Q50.0,95.0 46.8,90.7 Q43.6,86.4 39.1,89.4 Q34.6,92.3 33.1,87.2 Q31.5,82.0 26.3,83.3 Q21.1,84.5 21.4,79.1 Q21.7,73.8 16.3,73.1 Q11.0,72.5 13.1,67.6 Q15.2,62.7 10.5,60.2 Q5.7,57.8 9.3,53.9 Q13.0,50.0 9.3,46.1 Q5.7,42.2 10.5,39.8 Q15.2,37.3 13.1,32.4 Q11.0,27.5 16.3,26.9 Q21.7,26.2 21.4,20.9 Q21.1,15.5 26.3,16.7 Q31.5,18.0 33.1,12.8 Q34.6,7.7 39.1,10.6 Q43.6,13.6 46.8,9.3 Q50.0,5.0 53.2,9.3 Z" fill="#A03234"/>
+        </svg>
+        <div class="badge-text">2x1</div>
+      </div>
+    </div>
+    <div class="coins-row">
+      <div class="coins-icon">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="18" cy="23" rx="8" ry="4" fill="#D4B44A"/>
+          <ellipse cx="18" cy="21" rx="8" ry="4" fill="#F4CF54"/>
+          <ellipse cx="16" cy="17" rx="8" ry="4" fill="#D4B44A"/>
+          <ellipse cx="16" cy="15" rx="8" ry="4" fill="#F4CF54"/>
+          <ellipse cx="14" cy="11" rx="8" ry="4" fill="#D4B44A"/>
+          <ellipse cx="14" cy="9" rx="8" ry="4" fill="#F4CF54"/>
+        </svg>
+      </div>
+      <span class="coins-count">424</span>
+    </div>
+  </div>
+
+  <!-- Play area -->
+  <div class="play-area">
+    <div class="prompt">Which Movie</div>
+    <div class="grid">
+      <div class="grid-cell"></div>
+      <div class="grid-cell"></div>
+      <div class="grid-cell"></div>
+      <div class="grid-cell"></div>
+    </div>
+
+    <!-- Answer box -->
+    <div class="answer-box" id="answerBox">
+      <div class="slots">
+        <span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span>
+        <span class="slash">/</span>
+        <span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span>
+        <span class="dash"></span><span class="dash"></span><span class="dash"></span>
+      </div>
+      <div class="hint-row">
+        <!-- Dialogue hint (rectangular speech bubbles) -->
+        <svg class="hint-icon speech-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14,6 L28,6 C30.2,6 32,7.8 32,10 L32,18 C32,20.2 30.2,22 28,22 L26,22 L26,27 L21,22 L14,22 C11.8,22 10,20.2 10,18 L10,10 C10,7.8 11.8,6 14,6 Z"/>
+          <path d="M8,12 L22,12 C24.2,12 26,13.8 26,16 L26,24 C26,26.2 24.2,28 22,28 L15,28 L10,33 L10,28 L8,28 C5.8,28 4,26.2 4,24 L4,16 C4,13.8 5.8,12 8,12 Z"/>
+        </svg>
+        <!-- Music hint -->
+        <svg class="hint-icon music-svg" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8,24 C8,21.5 10.5,20 13,20.5 C15.5,21 17,23 17,25.5 C17,28 14.5,29.5 12,29 C9.5,28.5 8,26.5 8,24 Z"/>
+          <path d="M16,25 L16,8 C16,7.4 16.4,7 17,7 L17,7 C17.6,7 18,7.4 18,8 L18,25"/>
+          <path d="M18,8 C18,8 24,10 24,16 L18,13 Z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Interactive demo: click box to start typing, letters fill blanks
+const blanks = ['P','U','L','P','/','F','I','C','T','I','O','N'];
+let typed = [];
+const box = document.getElementById('answerBox');
+box.addEventListener('click', () => box.focus());
+box.tabIndex = 0;
+box.addEventListener('keydown', (e) => {
+  if (e.key === 'Backspace') {
+    typed.pop();
+    renderSlots();
+  } else if (e.key.length === 1 && /[a-zA-Z]/.test(e.key) && typed.length < 11) {
+    typed.push(e.key.toUpperCase());
+    renderSlots();
+  }
+});
+function renderSlots() {
+  const slotsDiv = box.querySelector('.slots');
+  let html = '';
+  let ti = 0;
+  blanks.forEach(b => {
+    if (b === '/') {
+      html += '<span class="slash">/</span>';
+    } else {
+      if (ti < typed.length) {
+        html += '<span class="typed-letter">' + typed[ti] + '</span>';
+      } else {
+        html += '<span class="dash"></span>';
+      }
+      ti++;
+    }
+  });
+  slotsDiv.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
