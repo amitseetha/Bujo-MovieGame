@@ -82,8 +82,77 @@ private val HintGreen = Color(0xFFA3DB76)   // unused / available hint
 private val HintUsed = Color(0xFFA03234)    // hint already invoked
 private val AnswerBoxBorder = Color(0xFFEBD6CB)
 
-/** Which kind of audio hint the confirmation dialog is about. */
-private enum class HintKind { Dialogue, Soundtrack }
+/** Which kind of hint the confirmation dialog is about. */
+private enum class HintKind { Letter, Dialogue, Soundtrack }
+
+/**
+ * Computes the starting nudge: one random letter revealed per word with 3+ letters.
+ * Returns a Map of letter-index (0-based, spaces excluded) → correct Char.
+ * Uses questionId as random seed for consistency across recompositions.
+ */
+private fun computeStartingNudge(title: String, questionId: Int): Map<Int, Char> {
+    val rng = java.util.Random(questionId.toLong())
+    val result = mutableMapOf<Int, Char>()
+    val words = title.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+    var letterIdx = 0
+    for (word in words) {
+        if (word.length >= 3) {
+            val pick = rng.nextInt(word.length)
+            result[letterIdx + pick] = word[pick]
+        }
+        letterIdx += word.length
+    }
+    return result
+}
+
+/**
+ * Picks one random unfrozen, unfilled letter index to reveal.
+ * Returns null if all positions are already frozen or filled.
+ */
+private fun pickRandomLetterToReveal(
+    title: String,
+    frozenMap: Map<Int, Char>,
+    typedLetters: String,
+    seed: Long,
+): Int? {
+    val totalLetters = title.count { it != ' ' }
+    // Build list of positions that are neither frozen nor typed-into
+    val filledCount = frozenMap.size + typedLetters.length
+    val candidates = (0 until totalLetters).filter { it !in frozenMap && it >= typedLetters.length }
+    // Also include positions that typed letters haven't reached but aren't frozen
+    val allCandidates = (0 until totalLetters).filter { it !in frozenMap }
+        .let { free ->
+            // Among free positions, pick one that isn't already occupied by a typed letter
+            // typedLetters fills non-frozen positions left-to-right
+            val typedPositions = mutableSetOf<Int>()
+            var ti = 0
+            for (i in 0 until totalLetters) {
+                if (i in frozenMap) continue
+                if (ti < typedLetters.length) {
+                    typedPositions.add(i)
+                    ti++
+                }
+            }
+            free.filter { it !in typedPositions }
+        }
+    if (allCandidates.isEmpty()) return null
+    val rng = java.util.Random(seed)
+    return allCandidates[rng.nextInt(allCandidates.size)]
+}
+
+/**
+ * Given frozen positions and the movie title, returns the correct character
+ * at the given letter-index (spaces excluded).
+ */
+private fun correctLetterAt(title: String, letterIndex: Int): Char {
+    var idx = 0
+    for (ch in title) {
+        if (ch == ' ') continue
+        if (idx == letterIndex) return ch
+        idx++
+    }
+    return '?'
+}
 
 @Composable
 fun QuestionScreen(
@@ -110,6 +179,7 @@ fun QuestionScreen(
     var pendingHint by remember(next?.id) { mutableStateOf<HintKind?>(null) }
     var dialogueUnlocked by remember(next?.id) { mutableStateOf(false) }
     var soundtrackUnlocked by remember(next?.id) { mutableStateOf(false) }
+    var letterHintCount by remember(next?.id) { mutableStateOf(0) }
     var expandedSnapshot by remember(next?.id) { mutableStateOf<String?>(null) }
 
     if (next == null) return
@@ -119,11 +189,20 @@ fun QuestionScreen(
         next.movieTitle.count { it != ' ' }
     }
 
-    // Auto-validate once all blanks are filled
-    LaunchedEffect(typedLetters, totalLetters) {
-        if (typedLetters.length >= totalLetters) {
-            val reconstructed = reconstructGuess(next.movieTitle, typedLetters)
-            if (next.matches(reconstructed)) {
+    // Frozen letters: starting nudge + any letter hints purchased
+    val startingFrozen = remember(next) {
+        computeStartingNudge(next.movieTitle, next.id)
+    }
+    var frozenMap by remember(next?.id) { mutableStateOf(startingFrozen) }
+
+    // Number of user-typeable slots = total minus frozen
+    val typeableSlots = totalLetters - frozenMap.size
+
+    // Auto-validate once all typeable blanks are filled
+    LaunchedEffect(typedLetters, typeableSlots, frozenMap) {
+        if (typedLetters.length >= typeableSlots) {
+            val fullGuess = reconstructFromFrozenAndTyped(next.movieTitle, frozenMap, typedLetters)
+            if (next.matches(fullGuess)) {
                 ProfileStore.awardCoins(context, ProfileStore.COINS_PER_CORRECT)
                 ProfileStore.markAnswered(context, next.id)
                 onCorrect(next.id)
@@ -318,6 +397,7 @@ fun QuestionScreen(
                 LetterSlots(
                     title = next.movieTitle,
                     typedLetters = typedLetters,
+                    frozenMap = frozenMap,
                     modifier = Modifier.align(Alignment.Center),
                 )
 
@@ -327,20 +407,35 @@ fun QuestionScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                        // Dialogue hint icon
-                        IconButton(
-                            onClick = { pendingHint = HintKind.Dialogue },
-                            modifier = Modifier.size(44.dp),
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_hint_dialogue),
-                                contentDescription = stringResource(R.string.hint_dialogue),
-                                modifier = Modifier.size(38.dp),
-                                colorFilter = ColorFilter.tint(
-                                    if (dialogueUnlocked) HintUsed else HintGreen,
-                                ),
-                            )
-                        }
+                    // Letter hint icon (leftmost)
+                    IconButton(
+                        onClick = { pendingHint = HintKind.Letter },
+                        modifier = Modifier.size(44.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_hint_letter),
+                            contentDescription = stringResource(R.string.hint_letter),
+                            modifier = Modifier.size(38.dp),
+                            colorFilter = ColorFilter.tint(
+                                if (letterHintCount > 0) HintUsed else HintGreen,
+                            ),
+                        )
+                    }
+
+                    // Dialogue hint icon
+                    IconButton(
+                        onClick = { pendingHint = HintKind.Dialogue },
+                        modifier = Modifier.size(44.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_hint_dialogue),
+                            contentDescription = stringResource(R.string.hint_dialogue),
+                            modifier = Modifier.size(38.dp),
+                            colorFilter = ColorFilter.tint(
+                                if (dialogueUnlocked) HintUsed else HintGreen,
+                            ),
+                        )
+                    }
 
                     // Music hint icon
                     IconButton(
@@ -364,7 +459,7 @@ fun QuestionScreen(
                     value = typedLetters,
                     onValueChange = { newValue ->
                         val filtered = newValue.filter { it.isLetter() }
-                        if (filtered.length <= totalLetters) {
+                        if (filtered.length <= typeableSlots) {
                             typedLetters = filtered
                         }
                     },
@@ -383,73 +478,133 @@ fun QuestionScreen(
     }
 
     pendingHint?.let { kind ->
-        val (cost, unlocked, filename, titleRes) = when (kind) {
-            HintKind.Dialogue -> HintContext(
-                cost = ProfileStore.COINS_PER_DIALOGUE_HINT,
-                unlocked = dialogueUnlocked,
-                filename = next.dialogueFilename,
-                titleRes = R.string.hint_dialogue,
-            )
-            HintKind.Soundtrack -> HintContext(
-                cost = ProfileStore.COINS_PER_SOUNDTRACK_HINT,
-                unlocked = soundtrackUnlocked,
-                filename = next.soundtrackFilename,
-                titleRes = R.string.hint_soundtrack,
-            )
-        }
-        val canAfford = (profile?.coins ?: 0) >= cost
-        AlertDialog(
-            onDismissRequest = { pendingHint = null },
-            containerColor = LegacyCream,
-            titleContentColor = LegacyCrimson,
-            textContentColor = LegacyDark,
-            title = { Text(stringResource(titleRes), color = LegacyCrimson) },
-            text = {
-                Text(
-                    if (unlocked)
-                        "Play the clip again?"
-                    else if (canAfford)
-                        "Spend $cost coins to hear the clip?"
-                    else
-                        stringResource(R.string.not_enough_coins),
-                    color = LegacyDark,
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            val alreadyUnlocked = unlocked
-                            if (!alreadyUnlocked) {
-                                val ok = ProfileStore.spendCoins(context, cost)
-                                if (ok) {
-                                    when (kind) {
-                                        HintKind.Dialogue -> dialogueUnlocked = true
-                                        HintKind.Soundtrack -> soundtrackUnlocked = true
+        when (kind) {
+            HintKind.Letter -> {
+                // Check if there are still letters to reveal
+                val hasUnrevealed = frozenMap.size < totalLetters - typedLetters.length
+                val cost = ProfileStore.COINS_PER_LETTER_HINT
+                val canAfford = (profile?.coins ?: 0) >= cost
+                AlertDialog(
+                    onDismissRequest = { pendingHint = null },
+                    containerColor = LegacyCream,
+                    titleContentColor = LegacyCrimson,
+                    textContentColor = LegacyDark,
+                    title = { Text(stringResource(R.string.hint_letter), color = LegacyCrimson) },
+                    text = {
+                        Text(
+                            if (!hasUnrevealed)
+                                "No more letters to reveal!"
+                            else if (canAfford)
+                                "Spend $cost coins to reveal a letter?"
+                            else
+                                stringResource(R.string.not_enough_coins),
+                            color = LegacyDark,
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val ok = ProfileStore.spendCoins(context, cost)
+                                    if (ok) {
+                                        letterHintCount++
+                                        val seed = next.id.toLong() * 1000 + letterHintCount
+                                        val idx = pickRandomLetterToReveal(
+                                            next.movieTitle, frozenMap, typedLetters, seed,
+                                        )
+                                        if (idx != null) {
+                                            val ch = correctLetterAt(next.movieTitle, idx)
+                                            frozenMap = frozenMap + (idx to ch)
+                                        }
                                     }
+                                    pendingHint = null
                                 }
-                            }
-                            val nowUnlocked = when (kind) {
-                                HintKind.Dialogue -> dialogueUnlocked || alreadyUnlocked
-                                HintKind.Soundtrack -> soundtrackUnlocked || alreadyUnlocked
-                            }
-                            if (nowUnlocked && filename.isNotBlank()) {
-                                audio.playFromAssets(context, "audio/$filename")
-                            }
-                            pendingHint = null
+                            },
+                            enabled = canAfford && hasUnrevealed,
+                        ) {
+                            Text("Confirm", color = LegacyCrimson)
                         }
                     },
-                    enabled = unlocked || canAfford,
-                ) {
-                    Text(if (unlocked) "Play" else "Confirm", color = LegacyCrimson)
+                    dismissButton = {
+                        TextButton(onClick = { pendingHint = null }) {
+                            Text("Cancel", color = LegacyDark)
+                        }
+                    },
+                )
+            }
+            else -> {
+                val (cost, unlocked, filename, titleRes) = when (kind) {
+                    HintKind.Dialogue -> HintContext(
+                        cost = ProfileStore.COINS_PER_DIALOGUE_HINT,
+                        unlocked = dialogueUnlocked,
+                        filename = next.dialogueFilename,
+                        titleRes = R.string.hint_dialogue,
+                    )
+                    HintKind.Soundtrack -> HintContext(
+                        cost = ProfileStore.COINS_PER_SOUNDTRACK_HINT,
+                        unlocked = soundtrackUnlocked,
+                        filename = next.soundtrackFilename,
+                        titleRes = R.string.hint_soundtrack,
+                    )
+                    else -> return@let // unreachable
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingHint = null }) {
-                    Text("Cancel", color = LegacyDark)
-                }
-            },
-        )
+                val canAfford = (profile?.coins ?: 0) >= cost
+                AlertDialog(
+                    onDismissRequest = { pendingHint = null },
+                    containerColor = LegacyCream,
+                    titleContentColor = LegacyCrimson,
+                    textContentColor = LegacyDark,
+                    title = { Text(stringResource(titleRes), color = LegacyCrimson) },
+                    text = {
+                        Text(
+                            if (unlocked)
+                                "Play the clip again?"
+                            else if (canAfford)
+                                "Spend $cost coins to hear the clip?"
+                            else
+                                stringResource(R.string.not_enough_coins),
+                            color = LegacyDark,
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val alreadyUnlocked = unlocked
+                                    if (!alreadyUnlocked) {
+                                        val ok = ProfileStore.spendCoins(context, cost)
+                                        if (ok) {
+                                            when (kind) {
+                                                HintKind.Dialogue -> dialogueUnlocked = true
+                                                HintKind.Soundtrack -> soundtrackUnlocked = true
+                                                else -> {}
+                                            }
+                                        }
+                                    }
+                                    val nowUnlocked = when (kind) {
+                                        HintKind.Dialogue -> dialogueUnlocked || alreadyUnlocked
+                                        HintKind.Soundtrack -> soundtrackUnlocked || alreadyUnlocked
+                                        else -> false
+                                    }
+                                    if (nowUnlocked && filename.isNotBlank()) {
+                                        audio.playFromAssets(context, "audio/$filename")
+                                    }
+                                    pendingHint = null
+                                }
+                            },
+                            enabled = unlocked || canAfford,
+                        ) {
+                            Text(if (unlocked) "Play" else "Confirm", color = LegacyCrimson)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { pendingHint = null }) {
+                            Text("Cancel", color = LegacyDark)
+                        }
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -465,14 +620,29 @@ private data class HintContext(
  * where the original title has them.
  * e.g. title="Pulp Fiction", letters="pulpfiction" → "pulp fiction"
  */
-private fun reconstructGuess(title: String, letters: String): String {
+/**
+ * Reconstructs a full guess by merging frozen letters and user-typed letters.
+ * Frozen positions use the frozen character; non-frozen positions consume
+ * typed letters left-to-right. Spaces are re-inserted from the original title.
+ */
+private fun reconstructFromFrozenAndTyped(
+    title: String,
+    frozenMap: Map<Int, Char>,
+    typedLetters: String,
+): String {
     val result = StringBuilder()
-    var letterIdx = 0
+    var letterIdx = 0  // index into letter positions (spaces excluded)
+    var typedIdx = 0   // index into typedLetters
     for (ch in title) {
         if (ch == ' ') {
             result.append(' ')
-        } else if (letterIdx < letters.length) {
-            result.append(letters[letterIdx])
+        } else {
+            if (letterIdx in frozenMap) {
+                result.append(frozenMap[letterIdx])
+            } else if (typedIdx < typedLetters.length) {
+                result.append(typedLetters[typedIdx])
+                typedIdx++
+            }
             letterIdx++
         }
     }
@@ -480,9 +650,10 @@ private fun reconstructGuess(title: String, letters: String): String {
 }
 
 /**
- * Renders letter blanks grouped by word with "/" separators. Typed letters
- * progressively fill the blanks left-to-right. Unfilled positions show
- * an underscore bar. All in [SlotColor].
+ * Renders letter blanks grouped by word with "/" separators.
+ * Frozen letters (from starting nudge or letter hint) are shown in [SlotColor].
+ * Typed letters fill the remaining non-frozen blanks left-to-right.
+ * Unfilled positions show an underscore bar.
  *
  * Font size adapts to the total letter count so movies with ≤15 letters
  * comfortably fit on a single line.
@@ -491,6 +662,7 @@ private fun reconstructGuess(title: String, letters: String): String {
 private fun LetterSlots(
     title: String,
     typedLetters: String,
+    frozenMap: Map<Int, Char>,
     modifier: Modifier = Modifier,
 ) {
     val words = remember(title) {
@@ -498,9 +670,7 @@ private fun LetterSlots(
     }
     val totalLetters = remember(title) { title.count { it != ' ' } }
 
-    // Adaptive sizing: scale down for longer titles so ≤15 letters fit one line.
-    // Available width ≈ 288dp (360dp screen – 32dp outer – 40dp inner padding).
-    val wordCount = words.size
+    // Adaptive sizing
     val slotWidth = when {
         totalLetters <= 8 -> 24.dp
         totalLetters <= 15 -> 18.dp
@@ -527,8 +697,9 @@ private fun LetterSlots(
         else -> 4.dp
     }
 
-    // Distribute typed letters across words
-    var letterIdx = 0
+    // Iterate through positions, consuming typed letters for non-frozen slots
+    var letterIdx = 0   // global letter index (spaces excluded)
+    var typedIdx = 0    // index into typedLetters
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -551,17 +722,27 @@ private fun LetterSlots(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 repeat(word.length) {
-                    val hasLetter = letterIdx < typedLetters.length
-                    val letter = if (hasLetter) typedLetters[letterIdx].toString() else null
+                    val currentIdx = letterIdx
                     letterIdx++
+
+                    // Determine what to show at this position
+                    val displayChar: Char? = if (currentIdx in frozenMap) {
+                        frozenMap[currentIdx]
+                    } else if (typedIdx < typedLetters.length) {
+                        val ch = typedLetters[typedIdx]
+                        typedIdx++
+                        ch
+                    } else {
+                        null
+                    }
 
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.width(slotWidth),
                     ) {
-                        if (letter != null) {
+                        if (displayChar != null) {
                             Text(
-                                text = letter.uppercase(),
+                                text = displayChar.uppercase(),
                                 color = SlotColor,
                                 fontSize = letterFontSize,
                                 fontWeight = FontWeight.Bold,

@@ -8,6 +8,7 @@
     <string name="coins">Coins</string>
     <string name="hint_dialogue">Dialogue hint</string>
     <string name="hint_soundtrack">Soundtrack hint</string>
+    <string name="hint_letter">Letter hint</string>
     <string name="hint_cost">30 coins</string>
     <string name="guess_hint">Type the movie name…</string>
     <string name="submit">Guess</string>
@@ -19,7 +20,7 @@
     <string name="about">About</string>
     <string name="privacy">Privacy Policy</string>
     <string name="sound">Sound</string>
-    <string name="version_label">Version 0.2.0</string>
+    <string name="version_label">Version 0.3.0</string>
     <string name="about_body_1">Bujo is a game of movies — guess the film from four snapshots and an iconic dialogue.</string>
     <string name="about_body_2">Made by Amit.</string>
     <string name="privacy_body">Bujo v0.1 stores your username, coin balance and answered-question history locally on your device using Android DataStore. The app has no backend and makes no network calls during gameplay. We do not collect analytics, crash reports or any personal data. If you tap the Feedback button, your email client will open with a pre-addressed draft to amitseetha@gmail.com — sending that email is entirely your choice. Uninstalling the app or clearing its data deletes all locally-stored information. Contact: amitseetha@gmail.com.</string>

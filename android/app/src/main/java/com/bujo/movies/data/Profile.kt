@@ -30,6 +30,7 @@ object ProfileStore {
     const val COINS_PER_CORRECT = 50
     const val COINS_PER_DIALOGUE_HINT = 30
     const val COINS_PER_SOUNDTRACK_HINT = 30
+    const val COINS_PER_LETTER_HINT = 60
 
     data class Profile(
         val username: String?,
