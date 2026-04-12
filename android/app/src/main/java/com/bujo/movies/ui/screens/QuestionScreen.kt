@@ -7,20 +7,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -59,10 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -148,7 +144,8 @@ fun QuestionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(PlayAreaBg),
+            .background(PlayAreaBg)
+            .imePadding(),
     ) {
         // ── White top strip: settings | level badge | coins ──
         Box(
@@ -229,27 +226,71 @@ fun QuestionScreen(
                 .padding(horizontal = 16.dp),
         ) {
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(40.dp))
 
-            Text(
-                text = next.prompt,
-                color = LegacyCrimson,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // 2x2 snapshot grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(0.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth(),
+            // 2×2 snapshot container (645:380 proportions, border radius 20)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(645f / 380f)
+                    .clip(RoundedCornerShape(20.dp)),
             ) {
-                items(next.snapshotFilenames) { filename ->
-                    SnapshotTile(filename = filename, onClick = { expandedSnapshot = filename })
+                // 2×2 grid (shown when no snapshot is expanded)
+                if (expandedSnapshot == null) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            SnapshotTile(
+                                filename = next.snapshotFilenames.getOrElse(0) { "" },
+                                onClick = { expandedSnapshot = next.snapshotFilenames.getOrNull(0) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 6.dp, bottom = 6.dp),
+                            )
+                            SnapshotTile(
+                                filename = next.snapshotFilenames.getOrElse(1) { "" },
+                                onClick = { expandedSnapshot = next.snapshotFilenames.getOrNull(1) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 6.dp, bottom = 6.dp),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            SnapshotTile(
+                                filename = next.snapshotFilenames.getOrElse(2) { "" },
+                                onClick = { expandedSnapshot = next.snapshotFilenames.getOrNull(2) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 6.dp, top = 6.dp),
+                            )
+                            SnapshotTile(
+                                filename = next.snapshotFilenames.getOrElse(3) { "" },
+                                onClick = { expandedSnapshot = next.snapshotFilenames.getOrNull(3) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 6.dp, top = 6.dp),
+                            )
+                        }
+                    }
+                } else {
+                    // Expanded: single snapshot fills the entire container
+                    SnapshotTile(
+                        filename = expandedSnapshot!!,
+                        onClick = { expandedSnapshot = null },
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
 
@@ -339,10 +380,6 @@ fun QuestionScreen(
                 )
             } // end answer Box
         } // end content Column
-    }
-
-    expandedSnapshot?.let { filename ->
-        ExpandedSnapshotDialog(filename = filename, onDismiss = { expandedSnapshot = null })
     }
 
     pendingHint?.let { kind ->
@@ -547,13 +584,17 @@ private fun LetterSlots(
 }
 
 @Composable
-private fun SnapshotTile(filename: String, onClick: () -> Unit) {
+private fun SnapshotTile(
+    filename: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
+    if (filename.isBlank()) return
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(12.dp))
+        modifier = modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(20.dp))
             .background(LegacyDark)
             .clickable(onClick = onClick),
     ) {
@@ -563,34 +604,8 @@ private fun SnapshotTile(filename: String, onClick: () -> Unit) {
                 .build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
         )
     }
 }
 
-@Composable
-private fun ExpandedSnapshotDialog(filename: String, onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LegacyDark.copy(alpha = 0.92f))
-                .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center,
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data("file:///android_asset/images/$filename")
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-            )
-        }
-    }
-}

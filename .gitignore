@@ -30,7 +30,12 @@ __pycache__/
 keystore.properties
 secrets.properties
 
-# Stale intermediate files kept in the workspace for reference but not committed
+# Internal docs, mockups & design assets — keep locally, not in the repo
+/brand/
+/content/
+/docs/
 /Bujo PRD v1.docx
+/Bujo PRD v1.0.docx
 /Questions, Options.xlsx
 /check_links.py
+/question_topbar_preview.html
