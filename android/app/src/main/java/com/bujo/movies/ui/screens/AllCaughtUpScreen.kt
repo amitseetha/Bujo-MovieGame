@@ -36,6 +36,7 @@ const val FEEDBACK_EMAIL = "amitseetha@gmail.com"
 @Composable
 fun AllCaughtUpScreen(
     onSettings: () -> Unit,
+    onWallOfFame: () -> Unit,
 ) {
     val context = LocalContext.current
     Box(
@@ -102,6 +103,22 @@ fun AllCaughtUpScreen(
             ) {
                 Text(
                     stringResource(R.string.settings),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onWallOfFame,
+                shape = RoundedCornerShape(28.dp),
+                border = BorderStroke(1.dp, LegacyCrimson),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = LegacyCrimson),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            ) {
+                Text(
+                    stringResource(R.string.wall_of_fame),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                 )

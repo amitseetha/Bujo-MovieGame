@@ -19,12 +19,14 @@ import com.bujo.movies.data.ContentPack
 import com.bujo.movies.data.ProfileStore
 import com.bujo.movies.ui.screens.AboutScreen
 import com.bujo.movies.ui.screens.AllCaughtUpScreen
+import com.bujo.movies.ui.screens.LevelUpScreen
 import com.bujo.movies.ui.screens.PrivacyScreen
 import com.bujo.movies.ui.screens.QuestionScreen
 import com.bujo.movies.ui.screens.SettingsScreen
 import com.bujo.movies.ui.screens.SplashScreen
 import com.bujo.movies.ui.screens.SuccessScreen
 import com.bujo.movies.ui.screens.UsernameScreen
+import com.bujo.movies.ui.screens.WallOfFameScreen
 import kotlinx.coroutines.flow.firstOrNull
 
 object Routes {
@@ -32,11 +34,14 @@ object Routes {
     const val USERNAME = "username"
     const val QUESTION = "question"
     const val SUCCESS = "success/{qid}"
+    const val LEVEL_UP = "level_up/{level}"
     const val ALL_CAUGHT_UP = "all_caught_up"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
     const val PRIVACY = "privacy"
+    const val WALL_OF_FAME = "wall_of_fame"
     fun success(qid: Int) = "success/$qid"
+    fun levelUp(completedLevel: Int) = "level_up/$completedLevel"
 }
 
 @Composable
@@ -112,8 +117,37 @@ fun BujoApp() {
                 SuccessScreen(
                     question = q,
                     onContinue = {
+                        // Is this the last question in its level (by ID)?
+                        val level = content.levelOf(qid)
+                        val lastIdInLevel = content.questionsForLevel(level)
+                            .maxByOrNull { it.id }?.id ?: qid
+                        val hasNextLevel = level < content.totalLevels
+
+                        if (qid == lastIdInLevel && hasNextLevel) {
+                            nav.navigate(Routes.levelUp(level)) {
+                                popUpTo(Routes.SUCCESS) { inclusive = true }
+                            }
+                        } else {
+                            nav.navigate(Routes.QUESTION) {
+                                popUpTo(Routes.SUCCESS) { inclusive = true }
+                            }
+                        }
+                    },
+                )
+            }
+            composable(Routes.LEVEL_UP) { backStack ->
+                val completedLevel = backStack.arguments?.getString("level")?.toIntOrNull() ?: 1
+                // Gather snapshot filenames from the completed level for the blurred background
+                val levelSnaps = content.questionsForLevel(completedLevel)
+                    .flatMap { it.snapshotFilenames }
+                    .take(4)
+                LevelUpScreen(
+                    content = content,
+                    completedLevel = completedLevel,
+                    lastLevelSnapshots = levelSnaps,
+                    onContinue = {
                         nav.navigate(Routes.QUESTION) {
-                            popUpTo(Routes.SUCCESS) { inclusive = true }
+                            popUpTo(Routes.LEVEL_UP) { inclusive = true }
                         }
                     },
                 )
@@ -121,6 +155,12 @@ fun BujoApp() {
             composable(Routes.ALL_CAUGHT_UP) {
                 AllCaughtUpScreen(
                     onSettings = { nav.navigate(Routes.SETTINGS) },
+                    onWallOfFame = { nav.navigate(Routes.WALL_OF_FAME) },
+                )
+            }
+            composable(Routes.WALL_OF_FAME) {
+                WallOfFameScreen(
+                    onBack = { nav.popBackStack() },
                 )
             }
             composable(Routes.SETTINGS) {
